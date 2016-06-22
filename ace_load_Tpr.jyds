@@ -1,0 +1,9 @@
+tr= getParam( 'timerange', '2006-01-01', 'timerange to load' )
+
+tpr= getDataSet('vap+cdaweb:ds=AC_H0_SWE&id=Tpr', tr)
+
+tpr = tpr * 8.6217e-5
+# convert K to eV 
+tpr.putProperty(QDataSet.LABEL, 'Tp_r')
+
+result = tpr

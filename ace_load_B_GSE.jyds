@@ -1,0 +1,7 @@
+tr= getParam( 'timerange', '2006-01-01', 'timerange to load' )
+
+BGSEc = getDataSet('vap+cdaweb:ds=AC_H0_MFI&id=BGSEc', tr)
+
+BGSEc.putProperty(QDataSet.LABEL, 'B (nT)')
+
+result = BGSEc

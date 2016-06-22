@@ -1,0 +1,18 @@
+tr= getParam( 'timerange', '2006-01-01', 'timerange to load' )
+
+v_GSE= getDataSet('vap+cdaweb:ds=AC_H0_SWE&id=V_GSE', tr)
+
+# adjust Vx by average(Vx)
+vx = v_GSE[:, 0]
+mean_vx = mean(vx)
+vx_adjust = vx - mean_vx
+v_GSE[:, 0] = vx_adjust
+
+vx_label = 'Vx +' + str(abs(mean_vx))
+v_GSE.property( QDataSet.BUNDLE_1 ).putProperty( QDataSet.LABEL, 0, vx_label )
+# change V label
+v_GSE.putProperty(QDataSet.LABEL, 'Vp (km/s)')
+#legend_tag = new QDataSet(['Vx' , 'Vy', 'Vz'])
+#v_GSE.putProperty(QDataSet.BUNDLE_1, legend_tag)
+
+result = v_GSE

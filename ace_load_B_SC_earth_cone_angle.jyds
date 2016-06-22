@@ -1,0 +1,23 @@
+tr= getParam( 'timerange', '2006-01-01', 'timerange to load' )
+
+# load B vec
+b = getDataSet('vap+cdaweb:ds=AC_H0_MFI&id=BGSEc', tr)
+
+# load pos vec
+pos = getDataSet('vap+cdaweb:ds=AC_H0_MFI&id=SC_pos_GSE', tr)
+
+b_mag = magnitude(b)
+pos_mag = magnitude(pos)
+
+b_dot_pos = abs(total(b * pos, 1))
+
+# cone angle
+cone_angle = acos(b_dot_pos / b_mag / pos_mag)
+
+cone_angle = toDegrees(cone_angle)
+
+cone_angle = putProperty( cone_angle, QDataSet.LABEL, 'B  cone angle')
+
+result = cone_angle
+#result = link(b.property(QDataSet.DEPEND_0), cone_angle)
+#result = putProperty( result, QDataSet.LABEL, 'B  cone angle')

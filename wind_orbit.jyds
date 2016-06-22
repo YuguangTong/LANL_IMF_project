@@ -1,0 +1,16 @@
+tr= getParam( 'timerange', '2014-01-09', 'timerange to load' )
+gse_pos_t= getDataSet('vap+cdaweb:ds=WI_OR_PRE&id=GSE_POS_t', tr)
+
+# coordinate in earth radius
+x = gse_pos_t[:, 0] / 6.371e3
+y = gse_pos_t[:, 1] / 6.371e3
+z = gse_pos_t[:, 1] / 6.371e3
+putProperty(x, QDataSet.UNITS, 'Earth radius')
+putProperty(y, QDataSet.UNITS, 'Earth radius')
+putProperty(z, QDataSet.UNITS, 'Earth radius')
+putProperty(x, QDataSet.LABEL, 'GSE x (Earth radius)')
+putProperty(y, QDataSet.LABEL, 'GSE y (Earth radius)')
+putProperty(z, QDataSet.LABEL, 'GSE z (Earth radius)')
+#plot(x, y)
+
+result = link(x, y)

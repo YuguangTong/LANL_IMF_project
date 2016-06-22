@@ -1,0 +1,7 @@
+tr= getParam( 'timerange', '2006-01-01', 'timerange to load' )
+
+dBrms = getDataSet('vap+cdaweb:ds=AC_H0_MFI&id=dBrms', tr)
+
+dBrms.putProperty(QDataSet.LABEL, 'dB_rms(nT)')
+
+result = dBrms

@@ -1,0 +1,17 @@
+tr= getParam( 'timerange', '2006-01-01', 'timerange to load' )
+
+bgse = getDataSet('vap+cdaweb:ds=AC_H0_MFI&id=BGSEc', tr)
+
+bx = bgse[:, 0]
+by = bgse[:, 1]
+bz = bgse[:, 2]
+
+bp = sqrt(bx**2 + by**2)
+theta = toDegrees(atan(bz/bp))
+#theta = 90 -theta
+
+theta = putProperty(theta, QDataSet.LABEL, 'B_theta')
+phi = putProperty(theta, QDataSet.UNITS, Units.deg)
+time = bgse.property(QDataSet.DEPEND_0)
+result = link(time, theta)
+

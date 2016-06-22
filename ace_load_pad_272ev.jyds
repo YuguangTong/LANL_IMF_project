@@ -1,0 +1,17 @@
+# default time range
+tr= getParam( 'timerange', '2006-01-01', 'timerange to load' )
+
+angles = findgen(20) * 9. + 4.5
+
+ds = getDataSet('http://www.srl.caltech.edu/ACE/ASC/DATA/level3/swepam/data/$Y/ace_swepam_pa272ev_$Y-$j_v1.dat?rank2=field6-field25&time=field0&timeFormat=$Y+$j+$H+$M+$S', tr, monitor)
+
+#ds.putProperty(QDataSet.DEPEND_1, angles)
+
+#ds.putProperty(QDataSet.LABEL, 'PA')
+
+#result = ds
+
+angles = putProperty(angles, QDataSet.LABEL, 'Pitch Angle')
+angles = putProperty(angles, QDataSet.UNITS, Units.deg )
+epoch = ds.property(QDataSet.DEPEND_0)
+result = link(epoch, angles, ds)

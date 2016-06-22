@@ -1,0 +1,14 @@
+tr= getParam( 'timerange', '2006-01-01', 'timerange to load' )
+
+bgse = getDataSet('vap+cdaweb:ds=AC_H0_MFI&id=BGSEc', tr)
+
+bx = bgse[:, 0]
+by = bgse[:, 1]
+
+# calculate azimuth angle of B
+phi = toDegrees(atan2(by, bx))
+
+phi = putProperty(phi, QDataSet.LABEL, 'B_phi')
+phi = putProperty(phi, QDataSet.UNITS, Units.deg)
+time = bgse.property(QDataSet.DEPEND_0)
+result = link(time, phi)

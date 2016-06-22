@@ -1,0 +1,104 @@
+from org.das2.components import DataPointRecorderNew
+from org.virbo.dataset import SemanticOps
+from org.das2.dataset import DataSetUpdateListener
+from org.das2.graph import SpectrogramRenderer
+import java.util.HashMap
+
+sc= getParam( 'sc', 'A', 'the spacecraft name', ['A','B'] )
+#tr= getParam( 'timerange', '2013-10-23T16:47:00.000Z/2013-10-23T18:13:00.000Z', 'timerange to load' )
+tr= getParam( 'timerange', '2006-01-01', 'timerange to load' )
+# load( 'http://emfisis.physics.uiowa.edu/team/jy/dev/jbf/george/20150803/%s.vap' %sc )
+# load vap file
+load('/Users/Tong/Google_Drive/research/projects/IMF_L1/autoplot/ace_summary_panel.vap')
+#setLayoutOverplot(2)
+
+xx = addPlotElement(0)
+plot(xx, None)
+
+
+dpr= DataPointRecorderNew()
+
+addTab( 'digitizer', dpr )
+
+from org.das2.graph import Renderer
+
+class MyRenderer( Renderer ):
+    def render( self, g, xaxis, yaxis, monitor ):
+        ds= self.getDataSet()
+        if ( ds!=None ):
+            for ds1 in ds:
+                g.drawLine( int( xaxis.transform( datum( ds1.slice(0) ) ) ), 
+                            int( yaxis.transform( datum( ds1.slice(1) ) ) ), 
+                            int( xaxis.transform( datum( ds1.slice(2) ) ) ), 
+                            int( yaxis.transform( datum( ds1.slice(3) ) ) ) )
+
+plot( 0, "" )
+rend= MyRenderer()
+dom.plots[0].controller.dasPlot.addRenderer(rend)
+
+class MyUpdateListener( DataSetUpdateListener ):
+    def dataSetUpdated( self, e ):
+        ds= dpr.getDataSet()
+        rend.setDataSet(ds)
+            
+dpr.addDataSetUpdateListener( MyUpdateListener() )
+
+class MySelectionListener(DataSetUpdateListener):
+   def dataSetUpdated(self,event):
+        ds= dpr.getSelectedDataSet()
+        if ( ds!=None ):
+            plot( xx, ds[:,0], ds[:,1] , color=Color.PINK, symsize=11, lineStyle='None' )
+        else:
+            plot( xx, "" )
+            
+dpr.addSelectedDataSetUpdateListener( MySelectionListener() )
+
+dpr.setColumnCount(4)
+dpr.setColumn( 0, 'x', Units.us2000, '2000-001' )
+dpr.setColumn( 1, 'y', Units.deg, '0' ) # default value if not specified
+dpr.setColumn( 2, 'xtop', Units.us2000, '2000-001' )
+dpr.setColumn( 3, 'ytop', Units.deg, '0' )
+
+pp= dom.plots[0].controller.dasPlot
+
+from org.das2.event import DataPointSelectorMouseModule, DragRenderer,BoxRenderer
+from org.das2.event import BoxSelectorMouseModule
+
+mm= BoxSelectorMouseModule.create( pp, 'digitizer' )
+class SlopedLineRenderer( BoxRenderer ):
+    def renderDrag( self, g, p1, p2 ):
+        g.fillOval( p1.x-1,p1.y-1,3,3 )
+        g.drawLine( p1.x, p1.y, p2.x, p2.y )
+
+mm.setDragRenderer(SlopedLineRenderer(pp,False))
+
+import java.util.LinkedHashMap  # LinkedHashMap retains the order that items are added.
+
+plot(0, '/Users/Tong/Google_Drive/research/projects/IMF_L1/autoplot/ace_load_pad_272ev.jyds?timerange=%s' % tr, 
+  renderType = 'nnSpectrogram')
+#plot(0, 'vap+das2Server:http://emfisis.physics.uiowa.edu/das/das2Server?dataset=rbsp/RBSP-%s/WFR_spectral_matrices/TotalPowerB.dsdf&timerange=%s' % ( sc,tr), title='RBSP-%s Total Power B-Field' % sc )
+dom.plots[0].xaxis.range= DatumRangeUtil.parseTimeRange(tr)
+
+dom.plots[0].setTicksURI( 'vap+das2server:http://emfisis.physics.uiowa.edu/das/das2Server?dataset=rbsp/ephemeris%s.dsdf&interval=60&timerange=%s' % (sc,tr) )
+
+def boxSelected(event):
+    x= event.getStartX()
+    y= event.getStartY()
+    map= java.util.LinkedHashMap()
+    map.put( "xtop", event.getFinishX() )
+    map.put( "ytop", event.getFinishY() )
+    dpr.addDataPoint( x, y, map )
+    
+mm.BoxSelected=boxSelected
+
+pp.dasMouseInputAdapter.primaryModule= mm
+
+# make sure the focus is on the 0th plot element.  The 2nd will be the selected points and above that is the digitized.
+dom.controller.plotElement= dom.plotElements[0]
+
+import javax
+javax.swing.JOptionPane.showMessageDialog( getViewWindow(),'Drag a north-easterly line on the plot, and it will be recorded on the digitizer tab')
+
+dom.plots[0].yaxis.autoRange= False  # otherwise it will switch to linear axis with first digitized point.
+dom.plots[0].zaxis.range = DatumRange(5e-31, 2e-29,Units.dimensionless)
+#dom.plotElements[0].style.

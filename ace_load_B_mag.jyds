@@ -1,0 +1,6 @@
+tr= getParam( 'timerange', '2006-01-01', 'timerange to load' )
+# |B|
+magnitude= getDataSet('vap+cdaweb:ds=AC_H0_MFI&id=Magnitude', tr)
+
+magnitude.putProperty(QDataSet.LABEL, '|B|')
+result = magnitude

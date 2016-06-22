@@ -1,0 +1,6 @@
+tr= getParam( 'timerange', '2006-01-01', 'timerange to load' )
+
+Np = getDataSet('vap+cdaweb:ds=AC_H0_SWE&id=Np', tr)
+
+Np.putProperty(QDataSet.LABEL, 'Np (cc)')
+result = Np

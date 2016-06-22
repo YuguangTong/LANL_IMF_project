@@ -1,0 +1,107 @@
+from org.das2.components import DataPointRecorderNew
+#from org.virbo.dataset import SemanticOpsf
+from org.das2.dataset import DataSetUpdateListener
+from org.das2.graph import SpectrogramRenderer
+import java.util.HashMap
+
+#sc= getParam( 'sc', 'A', 'the spacecraft name', ['A','B'] )
+#tr= getParam( 'timerange', '2013-10-23T16:47:00.000Z/2013-10-23T18:13:00.000Z', 'timerange to load' )
+#tr= getParam( 'timerange', '2006-01-01', 'timerange to load' )
+# load( 'http://emfisis.physics.uiowa.edu/team/jy/dev/jbf/george/20150803/%s.vap' %sc )
+# load vap file
+load('/Users/Tong/Google_Drive/research/projects/IMF_L1/autoplot/ace_summary_panel_with_data.vap')
+
+#setLayoutOverplot(2)
+
+xx = addPlotElement(0)
+plot(xx, None)
+
+
+dpr= DataPointRecorderNew()
+
+addTab( 'digitizer', dpr )
+
+from org.das2.graph import Renderer
+
+class MyRenderer( Renderer ):
+    def render( self, g, xaxis, yaxis, monitor ):
+        ds= self.getDataSet()
+        if ( ds!=None ):
+            for ds1 in ds:
+                g.drawLine( int( xaxis.transform( datum( ds1.slice(0) ) ) ), 
+                            int( yaxis.transform( datum( ds1.slice(1) ) ) ), 
+                            int( xaxis.transform( datum( ds1.slice(2) ) ) ), 
+                            int( yaxis.transform( datum( ds1.slice(3) ) ) ) )
+
+#plot( 0, "" )
+rend= MyRenderer()
+dom.plots[0].controller.dasPlot.addRenderer(rend)
+
+class MyUpdateListener( DataSetUpdateListener ):
+    def dataSetUpdated( self, e ):
+        ds= dpr.getDataSet()
+        rend.setDataSet(ds)
+            
+dpr.addDataSetUpdateListener( MyUpdateListener() )
+
+class MySelectionListener(DataSetUpdateListener):
+   def dataSetUpdated(self,event):
+        ds= dpr.getSelectedDataSet()
+        if ( ds!=None ):
+            plot( xx, ds[:,0], ds[:,1] , color=Color.PINK, symsize=11, lineStyle='None' )
+        else:
+            plot( xx, "" )
+            
+dpr.addSelectedDataSetUpdateListener( MySelectionListener() )
+
+dpr.setColumnCount(4)
+dpr.setColumn( 0, 'x', Units.us2000, '2000-001' )
+dpr.setColumn( 1, 'y', Units.deg, '0' ) # default value if not specified
+dpr.setColumn( 2, 'xtop', Units.us2000, '2000-001' )
+dpr.setColumn( 3, 'ytop', Units.deg, '0' )
+
+pp= dom.plots[0].controller.dasPlot
+
+from org.das2.event import DataPointSelectorMouseModule, DragRenderer,BoxRenderer
+from org.das2.event import BoxSelectorMouseModule
+
+mm= BoxSelectorMouseModule.create( pp, 'digitizer' )
+class SlopedLineRenderer( BoxRenderer ):
+    def renderDrag( self, g, p1, p2 ):
+        g.fillOval( p1.x-1,p1.y-1,2,2 )
+        g.drawLine( p1.x, p1.y, p2.x, p2.y )
+
+mm.setDragRenderer(SlopedLineRenderer(pp,False))
+
+import java.util.LinkedHashMap  # LinkedHashMap retains the order that items are added.
+
+def boxSelected(event):
+    ds= dom.plotElements[0].controller.renderer.dataSet
+    x= event.getStartX()
+    # below  grab the nearest x point
+    time_series = ds.property(QDataSet.DEPEND_0)
+    index=int( round( findex( time_series,x ) ) )
+    x = datum( time_series[index] )
+    y= event.getStartY()
+    map= java.util.LinkedHashMap()
+    # grab the x of the finishing end
+    finish_x = event.getFinishX()
+    index=int( round( findex( time_series, finish_x ) ) )
+    finish_x = datum(time_series[index])
+    map.put( "xtop", finish_x )
+    map.put( "ytop", event.getFinishY() )
+    dpr.addDataPoint( x, y, map )
+    
+mm.BoxSelected=boxSelected
+
+pp.dasMouseInputAdapter.primaryModule= mm
+
+# make sure the focus is on the 0th plot element.  The 2nd will be the selected points and above that is the digitized.
+dom.controller.plotElement= dom.plotElements[0]
+
+import javax
+javax.swing.JOptionPane.showMessageDialog( getViewWindow(),'Drag a north-easterly line on the plot, and it will be recorded on the digitizer tab')
+
+dom.plots[0].yaxis.autoRange= False  # otherwise it will switch to linear axis with first digitized point.
+#dom.plots[0].zaxis.range = DatumRange(5e-31, 2e-29,Units.dimensionless)
+#dom.plotElements[0].style.
